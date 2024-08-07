@@ -50,13 +50,9 @@ import Layout from '../layouts/Layout.astro';
       return;
     }
 
-    console.log(`Fetching data for stock: ${currentStock}`);
-
     try {
       const response = await fetch(`/api/fetch.json?stock=${encodeURIComponent(currentStock)}`);
       const data = await response.json();
-
-      console.log('Data received:', data);
 
       if (!data.error) {
         renderChart(data);
@@ -82,12 +78,13 @@ import Layout from '../layouts/Layout.astro';
     }
 
     chartInstance = new Chart(ctx, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels: data.dates,
         datasets: [{
           label: 'Stock Prices',
           data: data.prices,
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
           borderColor: 'rgba(75, 192, 192, 1)',
           borderWidth: 1
         }]
@@ -95,13 +92,7 @@ import Layout from '../layouts/Layout.astro';
       options: {
         scales: {
           x: {
-            type: 'time',
-            time: {
-              unit: timeRange === '1D' ? 'hour' : 
-                     timeRange === '1W' ? 'day' : 
-                     timeRange === '1M' ? 'week' : 
-                     timeRange === '1Y' ? 'month' : 'year'
-            }
+            type: 'category'
           }
         }
       }
