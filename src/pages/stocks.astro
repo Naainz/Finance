@@ -22,6 +22,11 @@ import { useState, useEffect } from 'preact/hooks';
       </button>
 
       <div id="stockInfo" class="mt-4 italic hidden"></div>
+      <div id="additionalInfo" class="mt-4 hidden">
+        <p id="priceChange" class="text-lg font-semibold"></p>
+        <p id="marketCap" class="text-lg"></p>
+        <p id="revenue" class="text-lg"></p>
+      </div>
 
       <div id="timeRangeButtons" class="mt-8 hidden">
         <button class="px-4 py-2" data-range="1D">1D</button>
@@ -54,6 +59,10 @@ import { useState, useEffect } from 'preact/hooks';
     const timeRangeButtons = document.getElementById('timeRangeButtons').querySelectorAll('button');
     const timeRangeButtonsContainer = document.getElementById('timeRangeButtons');
     const stockInfo = document.getElementById('stockInfo');
+    const additionalInfo = document.getElementById('additionalInfo');
+    const priceChange = document.getElementById('priceChange');
+    const marketCapElement = document.getElementById('marketCap');
+    const revenueElement = document.getElementById('revenue');
     let chartInstance = null;
     let currentStock = '';
     let timeRange = '1M'; // Default time range to 1 Month
@@ -80,7 +89,9 @@ import { useState, useEffect } from 'preact/hooks';
         } else if (!data.error) {
           renderChart(data);
           updateStockInfo(data);
+          updateAdditionalInfo(data);
           timeRangeButtonsContainer.classList.remove('hidden');
+          additionalInfo.classList.remove('hidden');
         } else {
           console.error(data.error);
         }
@@ -102,6 +113,10 @@ import { useState, useEffect } from 'preact/hooks';
         chartInstance.destroy();
       }
 
+      const latestPrice = data.prices[data.prices.length - 1];
+      const initialPrice = data.prices[0];
+      const isPositive = latestPrice >= initialPrice;
+
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -109,8 +124,8 @@ import { useState, useEffect } from 'preact/hooks';
           datasets: [{
             label: `Stock Prices for ${data.stock}`,
             data: data.prices,
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: isPositive ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)',
+            backgroundColor: isPositive ? 'rgba(75, 192, 192, 0.2)' : 'rgba(255, 99, 132, 0.2)',
             fill: true,
             tension: 0.4
           }]
@@ -158,9 +173,34 @@ import { useState, useEffect } from 'preact/hooks';
 
     function updateStockInfo(data) {
       const latestPrice = data.prices[data.prices.length - 1];
-      const stockName = data.stock; // You can replace this with the actual stock name if you have it
-      stockInfo.innerHTML = `${timeRange}, for ${stockName}, ${currentStock} @ ${latestPrice}`;
+      const stockName = data.stock;
+      stockInfo.innerHTML = `${timeRange}, for ${stockName} @ ${latestPrice}`;
       stockInfo.classList.remove('hidden');
+    }
+
+    function updateAdditionalInfo(data) {
+      const latestPrice = data.prices[data.prices.length - 1];
+      const initialPrice = data.prices[0];
+      const priceDifference = latestPrice - initialPrice;
+      const priceDifferencePercentage = ((priceDifference / initialPrice) * 100).toFixed(2);
+      const marketCap = data.marketCap ? formatLargeNumber(data.marketCap) : 'N/A';
+      const revenue = data.revenue ? formatLargeNumber(data.revenue) : 'N/A';
+
+      priceChange.innerHTML = `Change: <span class="${priceDifference >= 0 ? 'text-green-500' : 'text-red-500'}">${priceDifference.toFixed(2)} (${priceDifferencePercentage}%)</span>`;
+      marketCapElement.innerHTML = `Market Cap: ${marketCap}`;
+      revenueElement.innerHTML = `Revenue: ${revenue}`;
+    }
+
+    function formatLargeNumber(number) {
+      if (number >= 1e12) {
+        return `${(number / 1e12).toFixed(2)} T`;
+      } else if (number >= 1e9) {
+        return `${(number / 1e9).toFixed(2)} B`;
+      } else if (number >= 1e6) {
+        return `${(number / 1e6).toFixed(2)} M`;
+      } else {
+        return number.toString();
+      }
     }
 
     function showPopup() {
