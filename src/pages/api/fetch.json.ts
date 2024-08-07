@@ -1,27 +1,39 @@
 import type { APIRoute } from 'astro';
+import fetch from 'node-fetch';
+import { config } from 'dotenv';
+
+config(); // Load environment variables from .env
+
+const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 
 export const GET: APIRoute = async ({ request }) => {
-  console.log('API endpoint hit'); // Ensure endpoint is hit
-
-  // Log the request method and URL for debugging
-  console.log('Request method:', request.method);
-  console.log('Full URL:', request.url); // Log full URL
-
-  // Parse the URL to extract the query parameters
-  const url = new URL(request.url, `http://${request.headers.get('host')}`);
-  console.log('Query parameters:', url.searchParams.toString()); // Log query parameters
+  const url = new URL(request.url, `http://localhost`); // Using a dummy host for URL parsing
 
   // Extracting the stock parameter
   const stock = url.searchParams.get('stock');
-  console.log('Extracted stock parameter:', stock); // Log the extracted stock parameter
 
   if (!stock) {
-    console.log('No stock parameter');
     return new Response(JSON.stringify({ error: 'Stock parameter is required' }), { status: 400 });
   }
 
-  // For now, simply return the stock parameter as the response
-  return new Response(JSON.stringify({ stock }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+  try {
+    const response = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${stock}&apikey=${ALPHA_VANTAGE_API_KEY}`);
+    const data = await response.json();
+
+    if (data['Error Message']) {
+      return new Response(JSON.stringify({ error: 'Invalid stock symbol' }), { status: 400 });
+    }
+
+    const timeSeries = data['Time Series (Daily)'];
+    const dates = Object.keys(timeSeries);
+    const prices = dates.map(date => timeSeries[date]['4. close']);
+
+    return new Response(JSON.stringify({ stock, prices, dates }), {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to fetch data' }), { status: 500 });
+  }
 };
