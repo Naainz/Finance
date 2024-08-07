@@ -15,7 +15,7 @@ import "../styles/global.css";
       <div class="container mx-auto px-4 flex justify-between items-center">
         <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white">Econ-hub</a>
         <div>
-          <a href="/demo" class="text-lg">Demo</a>
+          <a href="/stocks" class="text-lg">Stocks</a>
         </div>
         <button id="theme-toggle" class="focus:outline-none text-2xl">
           <i id="theme-toggle-icon" class="fas"></i>
@@ -25,6 +25,11 @@ import "../styles/global.css";
     <main>
       <slot />
     </main>
+    <footer class="bg-gray-800 text-white py-6 mt-4">
+      <div class="container mx-auto text-center">
+        <p>&copy; 2024 Econ-Hub. All rights reserved.</p>
+      </div>
+    </footer>
     <script src="/src/scripts/theme.js"></script>
   </body>
 </html>
