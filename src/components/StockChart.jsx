@@ -6,17 +6,29 @@ const StockChart = () => {
   const [stock, setStock] = useState('');
   const [chartData, setChartData] = useState(null);
   const [timeRange, setTimeRange] = useState('1D');
+  const [chartInstance, setChartInstance] = useState(null);
 
   const fetchStockData = async () => {
-    if (!stock) return;
+    if (!stock) {
+      console.log('No stock input');
+      return;
+    }
 
-    const response = await fetch(`/api/fetch.json?stock=${stock}`);
-    const data = await response.json();
+    console.log(`Fetching data for stock: ${stock}`); // Log stock handle
 
-    if (!data.error) {
-      setChartData(data);
-    } else {
-      console.error(data.error);
+    try {
+      const response = await fetch(`/api/fetch.json?stock=${stock}`);
+      const data = await response.json();
+
+      console.log('Data received:', data); // Log received data
+
+      if (!data.error) {
+        setChartData(data);
+      } else {
+        console.error(data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
     }
   };
 
@@ -28,7 +40,12 @@ const StockChart = () => {
   useEffect(() => {
     if (chartData) {
       const ctx = document.getElementById('stockChart').getContext('2d');
-      new Chart(ctx, {
+
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      const newChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels: chartData.dates,
@@ -53,6 +70,8 @@ const StockChart = () => {
           }
         }
       });
+
+      setChartInstance(newChartInstance);
     }
   }, [chartData, timeRange]);
 
@@ -73,19 +92,21 @@ const StockChart = () => {
         Fetch Data
       </button>
 
-      <div class="mt-8">
-        <button onClick={() => handleTimeRangeChange('1D')} class="px-4 py-2">1D</button>
-        <button onClick={() => handleTimeRangeChange('1W')} class="px-4 py-2">1W</button>
-        <button onClick={() => handleTimeRangeChange('1M')} class="px-4 py-2">1M</button>
-        <button onClick={() => handleTimeRangeChange('1Y')} class="px-4 py-2">1Y</button>
-        <button onClick={() => handleTimeRangeChange('ALL')} class="px-4 py-2">ALL</button>
-      </div>
-
       {chartData && (
-        <div class="mt-8">
-          <h3 class="text-2xl font-bold mb-4">Stock: {chartData.stock}</h3>
-          <canvas id="stockChart"></canvas>
-        </div>
+        <>
+          <div class="mt-8">
+            <button onClick={() => handleTimeRangeChange('1D')} class="px-4 py-2">1D</button>
+            <button onClick={() => handleTimeRangeChange('1W')} class="px-4 py-2">1W</button>
+            <button onClick={() => handleTimeRangeChange('1M')} class="px-4 py-2">1M</button>
+            <button onClick={() => handleTimeRangeChange('1Y')} class="px-4 py-2">1Y</button>
+            <button onClick={() => handleTimeRangeChange('ALL')} class="px-4 py-2">ALL</button>
+          </div>
+
+          <div class="mt-8">
+            <h3 class="text-2xl font-bold mb-4">Stock: {chartData.stock}</h3>
+            <canvas id="stockChart"></canvas>
+          </div>
+        </>
       )}
     </div>
   );
