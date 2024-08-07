@@ -2,8 +2,6 @@
 import Layout from '../layouts/Layout.astro';
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import Chart from 'chart.js/auto';
-import 'chartjs-adapter-date-fns';
 ---
 
 <Layout>
@@ -22,6 +20,8 @@ import 'chartjs-adapter-date-fns';
       >
         Fetch Data
       </button>
+
+      <div id="stockInfo" class="mt-4 italic hidden"></div>
 
       <div id="timeRangeButtons" class="mt-8 hidden">
         <button class="px-4 py-2" data-range="1D">1D</button>
@@ -45,14 +45,15 @@ import 'chartjs-adapter-date-fns';
   </section>
 
   <script type="module">
-    import Chart from '../node_modules/chart.js/auto';
-    import '../node_modules/chartjs-adapter-date-fns';
+    import Chart from './node_modules/chart.js/auto';
+    import './node_modules/chartjs-adapter-date-fns';
 
     const fetchButton = document.getElementById('fetchButton');
     const stockInput = document.getElementById('stockInput');
     const chartContainer = document.getElementById('chartContainer');
     const timeRangeButtons = document.getElementById('timeRangeButtons').querySelectorAll('button');
     const timeRangeButtonsContainer = document.getElementById('timeRangeButtons');
+    const stockInfo = document.getElementById('stockInfo');
     let chartInstance = null;
     let currentStock = '';
     let timeRange = '1M'; // Default time range to 1 Month
@@ -78,6 +79,7 @@ import 'chartjs-adapter-date-fns';
           showPopup();
         } else if (!data.error) {
           renderChart(data);
+          updateStockInfo(data);
           timeRangeButtonsContainer.classList.remove('hidden');
         } else {
           console.error(data.error);
@@ -152,6 +154,13 @@ import 'chartjs-adapter-date-fns';
           }
         }
       });
+    }
+
+    function updateStockInfo(data) {
+      const latestPrice = data.prices[data.prices.length - 1];
+      const stockName = data.stock; // You can replace this with the actual stock name if you have it
+      stockInfo.innerHTML = `${timeRange}, for ${stockName}, ${currentStock} @ ${latestPrice}`;
+      stockInfo.classList.remove('hidden');
     }
 
     function showPopup() {
