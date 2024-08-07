@@ -23,7 +23,7 @@ import 'chartjs-adapter-date-fns';
         Fetch Data
       </button>
 
-      <div id="timeRangeButtons" class="mt-8">
+      <div id="timeRangeButtons" class="mt-8 hidden">
         <button class="px-4 py-2" data-range="1D">1D</button>
         <button class="px-4 py-2" data-range="1W">1W</button>
         <button class="px-4 py-2" data-range="1M">1M</button>
@@ -52,9 +52,10 @@ import 'chartjs-adapter-date-fns';
     const stockInput = document.getElementById('stockInput');
     const chartContainer = document.getElementById('chartContainer');
     const timeRangeButtons = document.getElementById('timeRangeButtons').querySelectorAll('button');
+    const timeRangeButtonsContainer = document.getElementById('timeRangeButtons');
     let chartInstance = null;
     let currentStock = '';
-    let timeRange = '1D';
+    let timeRange = '1M'; // Default time range to 1 Month
 
     fetchButton.addEventListener('click', fetchStockData);
 
@@ -77,7 +78,7 @@ import 'chartjs-adapter-date-fns';
           showPopup();
         } else if (!data.error) {
           renderChart(data);
-          document.getElementById('timeRangeButtons').style.display = 'block';
+          timeRangeButtonsContainer.classList.remove('hidden');
         } else {
           console.error(data.error);
         }
@@ -157,5 +158,8 @@ import 'chartjs-adapter-date-fns';
       const popup = document.getElementById('errorPopup');
       popup.classList.remove('hidden');
     }
+
+    // Fetch data when the page loads with the default time range
+    document.addEventListener('DOMContentLoaded', fetchStockData);
   </script>
 </Layout>
