@@ -24,11 +24,11 @@ import 'chartjs-adapter-date-fns';
       </button>
 
       <div id="timeRangeButtons" class="mt-8">
-        <button class="px-4 py-2" onclick="handleTimeRangeChange('1D')">1D</button>
-        <button class="px-4 py-2" onclick="handleTimeRangeChange('1W')">1W</button>
-        <button class="px-4 py-2" onclick="handleTimeRangeChange('1M')">1M</button>
-        <button class="px-4 py-2" onclick="handleTimeRangeChange('1Y')">1Y</button>
-        <button class="px-4 py-2" onclick="handleTimeRangeChange('ALL')">ALL</button>
+        <button class="px-4 py-2" data-range="1D">1D</button>
+        <button class="px-4 py-2" data-range="1W">1W</button>
+        <button class="px-4 py-2" data-range="1M">1M</button>
+        <button class="px-4 py-2" data-range="1Y">1Y</button>
+        <button class="px-4 py-2" data-range="ALL">ALL</button>
       </div>
 
       <div id="chartContainer" class="mt-8">
@@ -43,12 +43,16 @@ import 'chartjs-adapter-date-fns';
     const fetchButton = document.getElementById('fetchButton');
     const stockInput = document.getElementById('stockInput');
     const chartContainer = document.getElementById('chartContainer');
-    const timeRangeButtons = document.getElementById('timeRangeButtons');
+    const timeRangeButtons = document.getElementById('timeRangeButtons').querySelectorAll('button');
     let chartInstance = null;
     let currentStock = '';
     let timeRange = '1D';
 
     fetchButton.addEventListener('click', fetchStockData);
+
+    timeRangeButtons.forEach(button => {
+      button.addEventListener('click', () => handleTimeRangeChange(button.dataset.range));
+    });
 
     async function fetchStockData() {
       currentStock = stockInput.value.trim();
@@ -63,7 +67,7 @@ import 'chartjs-adapter-date-fns';
 
         if (!data.error) {
           renderChart(data);
-          timeRangeButtons.style.display = 'block';
+          document.getElementById('timeRangeButtons').style.display = 'block';
         } else {
           console.error(data.error);
         }
