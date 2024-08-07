@@ -8,10 +8,15 @@ const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 
 console.log('Alpha Vantage API Key:', ALPHA_VANTAGE_API_KEY); // Log the API key to ensure it's loaded
 
-export const get: APIRoute = async ({ request }) => {
+export const GET: APIRoute = async ({ request }) => {
   console.log('API endpoint hit'); // Ensure endpoint is hit
   const url = new URL(request.url);
+  console.log('Full URL:', request.url); // Log full URL
+  console.log('Query parameters:', url.searchParams.toString()); // Log query parameters
+
+  // Extracting the stock parameter
   const stock = url.searchParams.get('stock');
+  console.log('Extracted stock parameter:', stock); // Log the extracted stock parameter
 
   if (!stock) {
     console.log('No stock parameter');

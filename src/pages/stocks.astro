@@ -1,13 +1,111 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import StockChart from '../components/StockChart.jsx';
-import { h } from 'preact';
 ---
 
 <Layout>
   <section class="py-20">
-    <div class="container mx-auto">
-      <StockChart />
+    <div class="container mx-auto text-center">
+      <h2 class="text-4xl font-bold mb-10">Stock Market Data</h2>
+      <input 
+        type="text" 
+        id="stockInput"
+        class="mb-4 p-2 border border-gray-300 rounded"
+        placeholder="Enter stock handle or title" 
+      />
+      <button 
+        id="fetchButton"
+        class="bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Fetch Data
+      </button>
+
+      <div id="timeRangeButtons" class="mt-8" style="display: none;">
+        <button class="px-4 py-2" onclick="handleTimeRangeChange('1D')">1D</button>
+        <button class="px-4 py-2" onclick="handleTimeRangeChange('1W')">1W</button>
+        <button class="px-4 py-2" onclick="handleTimeRangeChange('1M')">1M</button>
+        <button class="px-4 py-2" onclick="handleTimeRangeChange('1Y')">1Y</button>
+        <button class="px-4 py-2" onclick="handleTimeRangeChange('ALL')">ALL</button>
+      </div>
+
+      <div id="chartContainer" class="mt-8">
+        <canvas id="stockChart"></canvas>
+      </div>
     </div>
   </section>
+<script>
+  const fetchButton = document.getElementById('fetchButton');
+  const stockInput = document.getElementById('stockInput');
+  const chartContainer = document.getElementById('chartContainer');
+  const timeRangeButtons = document.getElementById('timeRangeButtons');
+  let chartInstance = null;
+  let currentStock = '';
+  let timeRange = '1D';
+
+  fetchButton.addEventListener('click', fetchStockData);
+
+  async function fetchStockData() {
+    currentStock = stockInput.value.trim();
+    if (!currentStock) {
+      console.log('No stock input');
+      return;
+    }
+
+    console.log(`Fetching data for stock: ${currentStock}`);
+
+    try {
+      const response = await fetch(`/api/fetch.json?stock=${encodeURIComponent(currentStock)}`);
+      const data = await response.json();
+
+      console.log('Data received:', data);
+
+      if (!data.error) {
+        renderChart(data);
+        timeRangeButtons.style.display = 'block';
+      } else {
+        console.error(data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }
+
+  function handleTimeRangeChange(range) {
+    timeRange = range;
+    fetchStockData();
+  }
+
+  function renderChart(data) {
+    const ctx = document.getElementById('stockChart').getContext('2d');
+
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: [{
+          label: 'Stock Prices',
+          data: data.prices,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: timeRange === '1D' ? 'hour' : 
+                     timeRange === '1W' ? 'day' : 
+                     timeRange === '1M' ? 'week' : 
+                     timeRange === '1Y' ? 'month' : 'year'
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
 </Layout>
