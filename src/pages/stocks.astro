@@ -7,7 +7,7 @@ import 'chartjs-adapter-date-fns';
 ---
 
 <Layout>
-  <section class="py-20">
+  <section class="py-20 relative">
     <div class="container mx-auto text-center">
       <h2 class="text-4xl font-bold mb-10">Stock Market Data</h2>
       <input 
@@ -35,7 +35,15 @@ import 'chartjs-adapter-date-fns';
         <canvas id="stockChart"></canvas>
       </div>
     </div>
+
+    <div id="errorPopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-md mx-auto">
+        <strong class="font-bold">Error</strong>
+        <span class="block sm:inline">Unfortunately, my API has been ratelimited. Please come back in 1-2 minutes to try again.</span>
+      </div>
+    </div>
   </section>
+
   <script type="module">
     import Chart from '../node_modules/chart.js/auto';
     import '../node_modules/chartjs-adapter-date-fns';
@@ -65,7 +73,9 @@ import 'chartjs-adapter-date-fns';
         const response = await fetch(`/api/fetch.json?stock=${encodeURIComponent(currentStock)}&range=${timeRange}`);
         const data = await response.json();
 
-        if (!data.error) {
+        if (response.status >= 500 || (data.error && data.error.includes("You've exceeded the maximum requests per minute"))) {
+          showPopup();
+        } else if (!data.error) {
           renderChart(data);
           document.getElementById('timeRangeButtons').style.display = 'block';
         } else {
@@ -73,6 +83,7 @@ import 'chartjs-adapter-date-fns';
         }
       } catch (error) {
         console.error('Error fetching data:', error);
+        showPopup();
       }
     }
 
@@ -140,6 +151,11 @@ import 'chartjs-adapter-date-fns';
           }
         }
       });
+    }
+
+    function showPopup() {
+      const popup = document.getElementById('errorPopup');
+      popup.classList.remove('hidden');
     }
   </script>
 </Layout>
