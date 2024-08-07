@@ -21,7 +21,7 @@ import { useState, useEffect } from 'preact/hooks';
         Fetch Data
       </button>
 
-      <div id="timeRangeButtons" class="mt-8" style="display: none;">
+      <div id="timeRangeButtons" class="mt-8">
         <button class="px-4 py-2" onclick="handleTimeRangeChange('1D')">1D</button>
         <button class="px-4 py-2" onclick="handleTimeRangeChange('1W')">1W</button>
         <button class="px-4 py-2" onclick="handleTimeRangeChange('1M')">1M</button>
@@ -35,7 +35,7 @@ import { useState, useEffect } from 'preact/hooks';
     </div>
   </section>
   <script type="module">
-    import Chart from './node_modules/chart.js/auto';
+    import Chart from '/node_modules/chart.js/auto';
 
     const fetchButton = document.getElementById('fetchButton');
     const stockInput = document.getElementById('stockInput');
@@ -55,7 +55,7 @@ import { useState, useEffect } from 'preact/hooks';
       }
 
       try {
-        const response = await fetch(`/api/fetch.json?stock=${encodeURIComponent(currentStock)}`);
+        const response = await fetch(`/api/fetch.json?stock=${encodeURIComponent(currentStock)}&range=${timeRange}`);
         const data = await response.json();
 
         if (!data.error) {
@@ -82,21 +82,53 @@ import { useState, useEffect } from 'preact/hooks';
       }
 
       chartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
           labels: data.dates,
           datasets: [{
-            label: 'Stock Prices',
+            label: `Stock Prices for ${data.stock}`,
             data: data.prices,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            fill: true,
+            tension: 0.4
           }]
         },
         options: {
+          responsive: true,
           scales: {
             x: {
-              type: 'category'
+              type: 'time',
+              time: {
+                unit: timeRange === '1D' ? 'hour' : 
+                       timeRange === '1W' ? 'day' : 
+                       timeRange === '1M' ? 'week' : 
+                       timeRange === '1Y' ? 'month' : 'year'
+              },
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Price'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            },
+            hover: {
+              mode: 'nearest',
+              intersect: true
             }
           }
         }

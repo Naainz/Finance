@@ -1,45 +1,59 @@
 import type { APIRoute } from 'astro';
-import fetch from 'node-fetch';
+import axios from 'axios';
 import { config } from 'dotenv';
+import { subDays, subWeeks, subMonths, subYears } from 'date-fns';
 
 config(); // Load environment variables from .env
 
-const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
+const POLYGON_API_KEY = process.env.POLYGON_API_KEY;
 
-interface FinnhubResponse {
-  c: number; // Current price
-  h: number; // High price
-  l: number; // Low price
-  o: number; // Open price
-  pc: number; // Previous close price
-  t: number; // Timestamp
-}
+const getStartDate = (range: string): Date => {
+  const now = new Date();
+  switch (range) {
+    case '1D':
+      return subDays(now, 1);
+    case '1W':
+      return subWeeks(now, 1);
+    case '1M':
+      return subMonths(now, 1);
+    case '1Y':
+      return subYears(now, 1);
+    case 'ALL':
+      return new Date(2000, 0, 1); // Example start date for all data
+    default:
+      return subDays(now, 1);
+  }
+};
 
 export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url, `http://localhost`); // Using a dummy host for URL parsing
 
-  // Extracting the stock parameter
+  // Extracting the stock and range parameters
   const stock = url.searchParams.get('stock');
+  const range = url.searchParams.get('range') || '1D';
 
   if (!stock) {
     return new Response(JSON.stringify({ error: 'Stock parameter is required' }), { status: 400 });
   }
 
+  const startDate = getStartDate(range).toISOString().split('T')[0];
+  const endDate = new Date().toISOString().split('T')[0];
+
   try {
-    const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${stock}&token=${FINNHUB_API_KEY}`);
-    if (!response.ok) {
-      console.log('Error response from Finnhub:', response.statusText);
-      throw new Error('Error response from Finnhub');
-    }
-    const data = await response.json() as FinnhubResponse;
+    const response = await axios.get(`https://api.polygon.io/v2/aggs/ticker/${stock}/range/1/day/${startDate}/${endDate}`, {
+      params: {
+        apiKey: POLYGON_API_KEY
+      }
+    });
 
-    if (data.c === undefined || data.h === undefined || data.l === undefined || data.o === undefined || data.pc === undefined) {
-      console.log('Invalid stock symbol or data');
-      return new Response(JSON.stringify({ error: 'Invalid stock symbol or data' }), { status: 400 });
+    const data = response.data;
+
+    if (!data.results || data.results.length === 0) {
+      return new Response(JSON.stringify({ error: 'Invalid stock symbol or no data available' }), { status: 400 });
     }
 
-    const prices = [data.c, data.h, data.l, data.o, data.pc];
-    const dates = ['Current', 'High', 'Low', 'Open', 'Previous Close'];
+    const prices = data.results.map((entry: any) => entry.c); // Close prices
+    const dates = data.results.map((entry: any) => new Date(entry.t).toISOString().split('T')[0]); // Date
 
     return new Response(JSON.stringify({ stock, prices, dates }), {
       headers: {
