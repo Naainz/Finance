@@ -1,81 +1,72 @@
 import type { APIRoute } from 'astro';
-import { formatISO } from 'date-fns';
 
 export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);
-  const stockInput = url.searchParams.get('stock');
+  const stock = url.searchParams.get('stock');
   const range = url.searchParams.get('range');
+  const apiKey = import.meta.env.ALPHA_VANTAGE_API_KEY;
 
-  if (!stockInput || !range) {
+  if (!stock || !range) {
     return new Response(JSON.stringify({ error: 'Stock and range parameters are required' }), { status: 400 });
   }
 
-  const today = new Date();
-  const endDate = formatISO(today, { representation: 'date' });
-  let startDate: string;
-
+  let functionType;
+  let interval = '';
   switch (range) {
+    case '1D':
+      functionType = 'TIME_SERIES_INTRADAY';
+      interval = '5min';
+      break;
     case '1W':
-      startDate = formatISO(new Date(today.setDate(today.getDate() - 7)), { representation: 'date' });
+      functionType = 'TIME_SERIES_DAILY';
       break;
     case '1M':
-      startDate = formatISO(new Date(today.setMonth(today.getMonth() - 1)), { representation: 'date' });
+      functionType = 'TIME_SERIES_DAILY';
       break;
     case '1Y':
-      startDate = formatISO(new Date(today.setFullYear(today.getFullYear() - 1)), { representation: 'date' });
+      functionType = 'TIME_SERIES_MONTHLY';
       break;
     case 'ALL':
+      functionType = 'TIME_SERIES_MONTHLY';
+      break;
     default:
-      startDate = formatISO(new Date(today.setFullYear(today.getFullYear() - 5)), { representation: 'date' });
+      functionType = 'TIME_SERIES_DAILY';
       break;
   }
 
-  const apiKey = import.meta.env.POLYGON_API_KEY;
-  const searchUrl = `https://api.polygon.io/v3/reference/tickers?search=${encodeURIComponent(stockInput)}&active=true&sort=ticker&order=asc&apiKey=${apiKey}`;
+  let apiUrl = `https://www.alphavantage.co/query?function=${functionType}&symbol=${encodeURIComponent(stock)}&apikey=${apiKey}`;
+  if (interval) {
+    apiUrl += `&interval=${interval}`;
+  }
 
   try {
-    // Search for the stock ticker based on the input name
-    const searchResponse = await fetch(searchUrl);
+    const response = await fetch(apiUrl);
+    const data = await response.json();
 
-    if (!searchResponse.ok) {
-      return new Response(JSON.stringify({ error: 'Stock not found' }), { status: 404 });
+    if (data['Error Message']) {
+      throw new Error(data['Error Message']);
     }
 
-    const searchResults = await searchResponse.json();
-    if (!searchResults.results || searchResults.results.length === 0) {
-      return new Response(JSON.stringify({ error: 'Stock not found' }), { status: 404 });
-    }
-
-    const stockTicker = searchResults.results[0].ticker;
-    const stockName = searchResults.results[0].name;
-
-    const stockDataUrl = `https://api.polygon.io/v2/aggs/ticker/${stockTicker}/range/1/day/${startDate}/${endDate}?apiKey=${apiKey}`;
-    const stockFinancialsUrl = `https://api.polygon.io/v2/reference/financials/${stockTicker}?limit=1&apiKey=${apiKey}`;
-
-    const [stockDataResponse, stockFinancialsResponse] = await Promise.all([
-      fetch(stockDataUrl),
-      fetch(stockFinancialsUrl)
-    ]);
-
-    if (!stockDataResponse.ok || !stockFinancialsResponse.ok) {
-      throw new Error('Error fetching data from Polygon.io');
-    }
-
-    const stockData = await stockDataResponse.json();
-    const stockFinancials = await stockFinancialsResponse.json();
-
-    if (stockData.results && stockFinancials.results.length > 0) {
-      const prices = stockData.results.map((result: any) => result.c);
-      const dates = stockData.results.map((result: any) => new Date(result.t).toISOString());
-      const marketCap = stockFinancials.results[0].marketCapitalization;
-      const revenue = stockFinancials.results[0].revenue;
-
-      return new Response(JSON.stringify({ prices, dates, stock: stockName, marketCap, revenue }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+    let timeSeriesKey = '';
+    if (range === '1D') {
+      timeSeriesKey = `Time Series (${interval})`;
+    } else if (range === '1W' || range === '1M') {
+      timeSeriesKey = 'Time Series (Daily)';
     } else {
-      return new Response(JSON.stringify({ error: 'No data found' }), { status: 404 });
+      timeSeriesKey = 'Monthly Time Series';
     }
+
+    const timeSeries = data[timeSeriesKey];
+    const dates = Object.keys(timeSeries);
+    const prices = dates.map(date => parseFloat(timeSeries[date]['4. close']));
+
+    return new Response(JSON.stringify({
+      stock,
+      dates: dates.reverse(),
+      prices: prices.reverse()
+    }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
