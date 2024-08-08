@@ -34,7 +34,7 @@ import { format } from 'date-fns';
     </div>
 
     <div id="customRangePopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-      <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-black dark:text-white px-4 py-3 rounded relative max-w-md mx-auto">
+      <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-black dark:text-white px-4 py-3 rounded relative max-w-md mx-auto" id="customRangePopupContent">
         <h3 class="text-lg font-bold mb-4">Select Custom Date Range</h3>
         <label for="startDate" class="block mb-2">Start Date:</label>
         <input type="date" id="startDate" class="mb-4 p-2 border border-gray-300 rounded w-full bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
@@ -55,6 +55,7 @@ import { format } from 'date-fns';
     const timeRangeButtonsContainer = document.getElementById('timeRangeButtons');
     const timeRangeButtons = timeRangeButtonsContainer.querySelectorAll('button');
     const customRangePopup = document.getElementById('customRangePopup');
+    const customRangePopupContent = document.getElementById('customRangePopupContent');
     let timeRange = '1M'; // Default time range to 1 Month
     let customStartDate = '';
     let customEndDate = '';
@@ -79,6 +80,13 @@ import { format } from 'date-fns';
         timeRange = 'custom';
         customRangePopup.classList.add('hidden');
         fetchNews();
+      }
+    });
+
+    // Close the popup if the background is clicked
+    customRangePopup.addEventListener('click', (event) => {
+      if (event.target === customRangePopup) {
+        customRangePopup.classList.add('hidden');
       }
     });
 
