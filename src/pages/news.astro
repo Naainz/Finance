@@ -108,9 +108,11 @@ import { useState, useEffect } from 'preact/hooks';
         const newsCard = document.createElement('div');
         newsCard.className = 'p-4 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800';
         newsCard.innerHTML = `
-          <h3 class="font-bold">${article.title}</h3>
-          <p class="mb-2">${article.description}</p>
-          <a href="${article.url}" target="_blank" class="text-blue-600">View Story</a>
+          <div class="flex justify-between items-start">
+            <h3 class="font-bold text-left">${article.title}</h3>
+            <a href="${article.url}" target="_blank" class="text-blue-600 ml-4">View Story</a>
+          </div>
+          <p class="mt-2 text-left">${article.description}</p>
         `;
         newsContainer.appendChild(newsCard);
       });
