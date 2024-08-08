@@ -29,7 +29,6 @@ import { useState, useEffect } from 'preact/hooks';
       </div>
 
       <div id="timeRangeButtons" class="mt-8 hidden">
-        <button class="px-4 py-2" data-range="1D">1D</button>
         <button class="px-4 py-2" data-range="1W">1W</button>
         <button class="px-4 py-2" data-range="1M">1M</button>
         <button class="px-4 py-2" data-range="1Y">1Y</button>
@@ -141,8 +140,7 @@ import { useState, useEffect } from 'preact/hooks';
             x: {
               type: 'time',
               time: {
-                unit: timeRange === '1D' ? 'hour' : 
-                       timeRange === '1W' ? 'day' : 
+                unit: timeRange === '1W' ? 'day' : 
                        timeRange === '1M' ? 'week' : 
                        timeRange === '1Y' ? 'month' : 'year'
               },
