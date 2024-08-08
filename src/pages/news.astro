@@ -1,0 +1,119 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { h } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
+---
+
+<Layout>
+  <section class="py-20 relative">
+    <div class="container mx-auto text-center">
+      <h2 class="text-4xl font-bold mb-10">Stock Market News</h2>
+      <input 
+        type="text" 
+        id="stockInput"
+        class="mb-4 p-2 border border-gray-300 rounded w-80 bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
+        placeholder="Enter stock handle or title" 
+      />
+      <button 
+        id="fetchButton"
+        class="bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Fetch News
+      </button>
+
+      <div id="timeRangeButtons" class="mt-8">
+        <button class="px-4 py-2" data-range="1W">1W</button>
+        <button class="px-4 py-2" data-range="1M">1M</button>
+        <button class="px-4 py-2" data-range="1Y">1Y</button>
+        <button class="px-4 py-2" data-range="custom">Custom</button>
+      </div>
+
+      <div id="newsContainer" class="mt-8 grid grid-cols-1 gap-4"></div>
+    </div>
+
+    <div id="customRangePopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-black dark:text-white px-4 py-3 rounded relative max-w-md mx-auto">
+        <h3 class="text-lg font-bold mb-4">Select Custom Date Range</h3>
+        <label for="startDate" class="block mb-2">Start Date:</label>
+        <input type="date" id="startDate" class="mb-4 p-2 border border-gray-300 rounded w-full bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
+        <label for="endDate" class="block mb-2">End Date:</label>
+        <input type="date" id="endDate" class="mb-4 p-2 border border-gray-300 rounded w-full bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
+        <button id="applyCustomRange" class="bg-blue-600 text-white px-4 py-2 rounded">Apply</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module">
+    const fetchButton = document.getElementById('fetchButton');
+    const stockInput = document.getElementById('stockInput');
+    const newsContainer = document.getElementById('newsContainer');
+    const timeRangeButtons = document.getElementById('timeRangeButtons').querySelectorAll('button');
+    const customRangePopup = document.getElementById('customRangePopup');
+    let timeRange = '1M'; // Default time range to 1 Month
+    let customStartDate = '';
+    let customEndDate = '';
+
+    fetchButton.addEventListener('click', fetchNews);
+
+    timeRangeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        if (button.dataset.range === 'custom') {
+          customRangePopup.classList.remove('hidden');
+        } else {
+          timeRange = button.dataset.range;
+          fetchNews();
+        }
+      });
+    });
+
+    document.getElementById('applyCustomRange').addEventListener('click', () => {
+      customStartDate = document.getElementById('startDate').value;
+      customEndDate = document.getElementById('endDate').value;
+      if (customStartDate && customEndDate) {
+        timeRange = 'custom';
+        customRangePopup.classList.add('hidden');
+        fetchNews();
+      }
+    });
+
+    async function fetchNews() {
+      const stock = stockInput.value.trim();
+      if (!stock) {
+        console.log('No stock input');
+        return;
+      }
+
+      let url = `/api/news.json?stock=${encodeURIComponent(stock)}&range=${timeRange}`;
+      if (timeRange === 'custom') {
+        url += `&startDate=${customStartDate}&endDate=${customEndDate}`;
+      }
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.error) {
+          console.error(data.error);
+        } else {
+          renderNews(data);
+        }
+      } catch (error) {
+        console.error('Error fetching news:', error);
+      }
+    }
+
+    function renderNews(data) {
+      newsContainer.innerHTML = '';
+      data.articles.forEach(article => {
+        const newsCard = document.createElement('div');
+        newsCard.className = 'p-4 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800';
+        newsCard.innerHTML = `
+          <h3 class="font-bold">${article.title}</h3>
+          <p class="mb-2">${article.description}</p>
+          <a href="${article.url}" target="_blank" class="text-blue-600">View Story</a>
+        `;
+        newsContainer.appendChild(newsCard);
+      });
+    }
+  </script>
+</Layout>
