@@ -1,54 +1,80 @@
-# Astro Starter Kit: Basics
+# Econ-hub
+
+Econ-hub is a one-stop-shop for stocks and other assistance for financial students. This project provides stock market data and news using Twelve Data and Financial Modeling Prep APIs. It features a charting tool for stock prices and news articles related to specific stocks.
+
+## Features
+
+- Fetch and display stock price data in various time ranges (1D, 1W, 1M, 1Y, ALL)
+- View market cap of the stock
+- Display company description
+- View recent news articles related to a specific stock
+- Dark mode support
+
+## Setup Instructions
+
+### Prerequisites
+
+- Node.js (version 14 or later)
+- NPM (version 6 or later)
+
+### Installation
+
+1. Clone the repository:
 
 ```sh
-npm create astro@latest -- --template basics
+git clone https://github.com/yourusername/econ-hub.git
+cd econ-hub
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+2. Install the dependencies:
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── components/
-│   │   └── Card.astro
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+```sh
+npm install
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+3. Create a `.env` file in the root directory of the project and add the following environment variables:
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+```sh
+TWELVE_DATA_API_KEY=your_twelve_data_api_key
+FMP_API_KEY=your_fmp_api_key
+FINNHUB_API_KEY=your_finnhub_api_key
+```
 
-Any static assets, like images, can be placed in the `public/` directory.
+4. Start the development server:
 
-## 🧞 Commands
+```sh
+npm start
+```
 
-All commands are run from the root of the project, from a terminal:
+The application should now be running at [http://localhost:3000](http://localhost:3000), or another port if astro.js tells you so.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+---
+## Usage
+### Stock Price Data
 
-## 👀 Want to learn more?
+1. Enter a stock symbol in the input box and click the "Search" button.
+2. Select a time range from the list.
+3. The stock price data will be displayed in a chart.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+### Stock News
+
+1. Click the "View News" button to navigate to the news page for the selected stock.
+2. The news page will display recent news articles related to the selected stock.
+3. Use the time range buttons to filter news articles by date.
+4. Click the "Custom" button to select a custom date range.
+
+### Tech Stack
+
+- Astro.js
+- Preact
+- Tailwind CSS
+- Chart.js
+- Twelve Data API
+- Financial Modeling Prep API
+- FinnHub API
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
