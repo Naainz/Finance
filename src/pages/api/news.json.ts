@@ -51,6 +51,7 @@ export const GET: APIRoute = async ({ request }) => {
       title: article.headline,
       description: article.summary,
       url: article.url,
+      datetime: article.datetime, // Add datetime field
     }));
 
     return new Response(JSON.stringify({ articles }), {

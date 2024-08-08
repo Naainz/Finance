@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
+import { format } from 'date-fns';
 ---
 
 <Layout>
@@ -44,6 +45,8 @@ import { useState, useEffect } from 'preact/hooks';
   </section>
 
   <script type="module">
+    import { format } from './node_modules/date-fns';
+
     const fetchButton = document.getElementById('fetchButton');
     const stockInput = document.getElementById('stockInput');
     const newsContainer = document.getElementById('newsContainer');
@@ -107,12 +110,28 @@ import { useState, useEffect } from 'preact/hooks';
       data.articles.forEach(article => {
         const newsCard = document.createElement('div');
         newsCard.className = 'p-4 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800';
+        
+        let formattedDate = 'N/A';
+        if (article.datetime) {
+          try {
+            const date = new Date(article.datetime * 1000); // Convert Unix timestamp to milliseconds
+            formattedDate = format(date, 'dd MMM yy');
+          } catch (error) {
+            console.error('Error formatting date:', error);
+          }
+        }
+
         newsCard.innerHTML = `
           <div class="flex justify-between items-start">
-            <h3 class="font-bold text-left">${article.title}</h3>
-            <a href="${article.url}" target="_blank" class="text-blue-600 ml-4">View Story</a>
+            <div>
+              <h3 class="font-bold text-left">${article.title}</h3>
+              <p class="mt-2 text-left">${article.description}</p>
+            </div>
+            <div class="ml-4 text-right">
+              <a href="${article.url}" target="_blank" class="text-blue-600">View Story</a>
+              <div class="text-gray-500 italic opacity-90">${formattedDate}</div>
+            </div>
           </div>
-          <p class="mt-2 text-left">${article.description}</p>
         `;
         newsContainer.appendChild(newsCard);
       });
