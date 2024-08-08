@@ -4,7 +4,8 @@ export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);
   const stock = url.searchParams.get('stock');
   const range = url.searchParams.get('range');
-  const apiKey = import.meta.env.TWELVE_DATA_API_KEY;
+  const twelveDataApiKey = import.meta.env.TWELVE_DATA_API_KEY;
+  const fmpApiKey = import.meta.env.FMP_API_KEY;
 
   if (!stock || !range) {
     return new Response(JSON.stringify({ error: 'Stock and range parameters are required' }), { status: 400 });
@@ -32,18 +33,28 @@ export const GET: APIRoute = async ({ request }) => {
       break;
   }
 
-  const apiUrl = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(stock)}&interval=${interval}&apikey=${apiKey}`;
+  const twelveDataUrl = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(stock)}&interval=${interval}&apikey=${twelveDataApiKey}`;
+  const fmpUrl = `https://financialmodelingprep.com/api/v3/profile/${encodeURIComponent(stock)}?apikey=${fmpApiKey}`;
 
   try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
+    const [timeSeriesResponse, profileResponse] = await Promise.all([
+      fetch(twelveDataUrl),
+      fetch(fmpUrl)
+    ]);
 
-    if (data.status === 'error') {
-      throw new Error(data.message);
+    const timeSeriesData = await timeSeriesResponse.json();
+    const profileData = await profileResponse.json();
+
+    if (timeSeriesData.status === 'error') {
+      throw new Error(timeSeriesData.message);
+    }
+    if (!profileData || profileData.length === 0) {
+      throw new Error('Error fetching profile data');
     }
 
-    const dates = data.values.map(value => value.datetime);
-    const prices = data.values.map(value => parseFloat(value.close));
+    const dates = timeSeriesData.values.map(value => value.datetime);
+    const prices = timeSeriesData.values.map(value => parseFloat(value.close));
+    const profile = profileData[0];
 
     // Filter data based on the range
     let filteredDates = dates;
@@ -63,6 +74,8 @@ export const GET: APIRoute = async ({ request }) => {
       stock,
       dates: filteredDates.reverse(),
       prices: filteredPrices.reverse(),
+      marketCap: profile.mktCap,
+      revenue: profile.revenue
     }), {
       headers: { 'Content-Type': 'application/json' },
     });
