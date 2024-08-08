@@ -46,7 +46,7 @@ import { format } from 'date-fns';
   </section>
 
   <script type="module">
-    import { format } from './node_modules/date-fns';
+    import { format } from '../node_modules/date-fns';
 
     const fetchButton = document.getElementById('fetchButton');
     const stockInput = document.getElementById('stockInput');
@@ -148,5 +148,15 @@ import { format } from 'date-fns';
         newsContainer.appendChild(newsCard);
       });
     }
+
+    // Check for stock parameter in URL and fetch news if present
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const stock = params.get('stock');
+      if (stock) {
+        stockInput.value = stock;
+        fetchNews();
+      }
+    });
   </script>
 </Layout>

@@ -20,6 +20,12 @@ import { useState, useEffect } from 'preact/hooks';
       >
         Fetch Data
       </button>
+      <a 
+        id="newsLink"
+        class="mt-4 inline-block bg-green-600 text-white px-4 py-2 rounded hidden"
+      >
+        View News
+      </a>
 
       <div id="stockInfo" class="mt-4 italic hidden"></div>
       <div id="additionalInfo" class="mt-4 hidden">
@@ -63,6 +69,7 @@ import { useState, useEffect } from 'preact/hooks';
     const priceChange = document.getElementById('priceChange');
     const marketCapElement = document.getElementById('marketCap');
     const revenueElement = document.getElementById('revenue');
+    const newsLink = document.getElementById('newsLink');
     let chartInstance = null;
     let currentStock = '';
     let timeRange = '1M'; // Default time range to 1 Month
@@ -90,8 +97,10 @@ import { useState, useEffect } from 'preact/hooks';
           renderChart(data);
           updateStockInfo(data);
           updateAdditionalInfo(data);
+          updateNewsLink(currentStock);
           timeRangeButtonsContainer.classList.remove('hidden');
           additionalInfo.classList.remove('hidden');
+          newsLink.classList.remove('hidden');
         } else {
           console.error(data.error);
         }
@@ -206,6 +215,10 @@ import { useState, useEffect } from 'preact/hooks';
     function showPopup() {
       const popup = document.getElementById('errorPopup');
       popup.classList.remove('hidden');
+    }
+
+    function updateNewsLink(stock) {
+      newsLink.href = `/news?stock=${encodeURIComponent(stock)}`;
     }
 
     // Fetch data when the page loads with the default time range
