@@ -56,8 +56,6 @@ export const GET: APIRoute = async ({ request }) => {
     const prices = timeSeriesData.values.map(value => parseFloat(value.close));
     const profile = profileData[0];
 
-    console.log('Profile Data:', profile); // Log the profile data
-
     // Filter data based on the range
     let filteredDates = dates;
     let filteredPrices = prices;
@@ -77,7 +75,7 @@ export const GET: APIRoute = async ({ request }) => {
       dates: filteredDates.reverse(),
       prices: filteredPrices.reverse(),
       marketCap: profile.mktCap,
-      revenue: profile.revenue
+      description: profile.description
     }), {
       headers: { 'Content-Type': 'application/json' },
     });
