@@ -56,6 +56,8 @@ export const GET: APIRoute = async ({ request }) => {
     const prices = timeSeriesData.values.map(value => parseFloat(value.close));
     const profile = profileData[0];
 
+    console.log('Profile Data:', profile); // Log the profile data
+
     // Filter data based on the range
     let filteredDates = dates;
     let filteredPrices = prices;

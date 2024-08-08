@@ -31,7 +31,6 @@ import { useState, useEffect } from 'preact/hooks';
       <div id="additionalInfo" class="mt-4 hidden">
         <p id="priceChange" class="text-lg font-semibold"></p>
         <p id="marketCap" class="text-lg"></p>
-        <p id="revenue" class="text-lg"></p>
       </div>
 
       <div id="timeRangeButtons" class="mt-8 hidden">
@@ -68,7 +67,6 @@ import { useState, useEffect } from 'preact/hooks';
     const additionalInfo = document.getElementById('additionalInfo');
     const priceChange = document.getElementById('priceChange');
     const marketCapElement = document.getElementById('marketCap');
-    const revenueElement = document.getElementById('revenue');
     const newsLink = document.getElementById('newsLink');
     let chartInstance = null;
     let currentStock = '';
@@ -193,11 +191,9 @@ import { useState, useEffect } from 'preact/hooks';
       const priceDifference = latestPrice - initialPrice;
       const priceDifferencePercentage = ((priceDifference / initialPrice) * 100).toFixed(2);
       const marketCap = data.marketCap ? formatLargeNumber(data.marketCap) : 'N/A';
-      const revenue = data.revenue ? formatLargeNumber(data.revenue) : 'N/A';
 
       priceChange.innerHTML = `Change: <span class="${priceDifference >= 0 ? 'text-green-500' : 'text-red-500'}">${priceDifference.toFixed(2)} (${priceDifferencePercentage}%)</span>`;
       marketCapElement.innerHTML = `Market Cap: ${marketCap}`;
-      revenueElement.innerHTML = `Revenue: ${revenue}`;
     }
 
     function formatLargeNumber(number) {
