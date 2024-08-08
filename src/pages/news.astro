@@ -123,15 +123,13 @@ import { format } from 'date-fns';
 
         newsCard.innerHTML = `
           <div class="flex justify-between items-start">
-            <div>
-              <h3 class="font-bold text-left">${article.title}</h3>
-              <p class="mt-2 text-left">${article.description}</p>
-            </div>
-            <div class="ml-4 text-right">
-              <a href="${article.url}" target="_blank" class="text-blue-600">View Story</a>
+            <h3 class="font-bold text-left">${article.title}</h3>
+            <div class="flex items-center space-x-2">
+              <a href="${article.url}" target="_blank" class="text-blue-600">More</a>
               <div class="text-gray-500 italic opacity-90">${formattedDate}</div>
             </div>
           </div>
+          <p class="mt-2 text-left">${article.description}</p>
         `;
         newsContainer.appendChild(newsCard);
       });
