@@ -34,29 +34,37 @@ export const GET: APIRoute = async ({ request }) => {
   }
 
   const apiKey = import.meta.env.POLYGON_API_KEY;
-  const stockDataUrl = `https://api.polygon.io/v2/aggs/ticker/${stock}/range/1/day/${startDate}/${endDate}?apiKey=${apiKey}`;
   const stockDetailsUrl = `https://api.polygon.io/v3/reference/tickers/${stock}?apiKey=${apiKey}`;
-  const stockFinancialsUrl = `https://api.polygon.io/v2/reference/financials/${stock}?limit=1&apiKey=${apiKey}`;
 
   try {
-    const [stockDataResponse, stockDetailsResponse, stockFinancialsResponse] = await Promise.all([
+    // Check if the stock ticker is valid
+    const stockDetailsResponse = await fetch(stockDetailsUrl);
+
+    if (!stockDetailsResponse.ok) {
+      return new Response(JSON.stringify({ error: 'Invalid stock ticker' }), { status: 404 });
+    }
+
+    const stockDetails = await stockDetailsResponse.json();
+    const stockName = stockDetails.results.name;
+
+    const stockDataUrl = `https://api.polygon.io/v2/aggs/ticker/${stock}/range/1/day/${startDate}/${endDate}?apiKey=${apiKey}`;
+    const stockFinancialsUrl = `https://api.polygon.io/v2/reference/financials/${stock}?limit=1&apiKey=${apiKey}`;
+
+    const [stockDataResponse, stockFinancialsResponse] = await Promise.all([
       fetch(stockDataUrl),
-      fetch(stockDetailsUrl),
       fetch(stockFinancialsUrl)
     ]);
 
-    if (!stockDataResponse.ok || !stockDetailsResponse.ok || !stockFinancialsResponse.ok) {
+    if (!stockDataResponse.ok || !stockFinancialsResponse.ok) {
       throw new Error('Error fetching data from Polygon.io');
     }
 
     const stockData = await stockDataResponse.json();
-    const stockDetails = await stockDetailsResponse.json();
     const stockFinancials = await stockFinancialsResponse.json();
 
-    if (stockData.results && stockDetails.results && stockFinancials.results.length > 0) {
+    if (stockData.results && stockFinancials.results.length > 0) {
       const prices = stockData.results.map((result: any) => result.c);
       const dates = stockData.results.map((result: any) => new Date(result.t).toISOString());
-      const stockName = stockDetails.results.name;
       const marketCap = stockFinancials.results[0].marketCapitalization;
       const revenue = stockFinancials.results[0].revenue;
 
