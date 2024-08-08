@@ -4,66 +4,65 @@ export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);
   const stock = url.searchParams.get('stock');
   const range = url.searchParams.get('range');
-  const apiKey = import.meta.env.ALPHA_VANTAGE_API_KEY;
+  const apiKey = import.meta.env.TWELVE_DATA_API_KEY;
 
   if (!stock || !range) {
     return new Response(JSON.stringify({ error: 'Stock and range parameters are required' }), { status: 400 });
   }
 
-  let functionType;
-  let interval = '';
+  let interval;
   switch (range) {
     case '1D':
-      functionType = 'TIME_SERIES_INTRADAY';
       interval = '5min';
       break;
     case '1W':
-      functionType = 'TIME_SERIES_DAILY';
+      interval = '1h';
       break;
     case '1M':
-      functionType = 'TIME_SERIES_DAILY';
+      interval = '1day';
       break;
     case '1Y':
-      functionType = 'TIME_SERIES_MONTHLY';
+      interval = '1week';
       break;
     case 'ALL':
-      functionType = 'TIME_SERIES_MONTHLY';
+      interval = '1month';
       break;
     default:
-      functionType = 'TIME_SERIES_DAILY';
+      interval = '1day';
       break;
   }
 
-  let apiUrl = `https://www.alphavantage.co/query?function=${functionType}&symbol=${encodeURIComponent(stock)}&apikey=${apiKey}`;
-  if (interval) {
-    apiUrl += `&interval=${interval}`;
-  }
+  const apiUrl = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(stock)}&interval=${interval}&apikey=${apiKey}`;
 
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
 
-    if (data['Error Message']) {
-      throw new Error(data['Error Message']);
+    if (data.status === 'error') {
+      throw new Error(data.message);
     }
 
-    let timeSeriesKey = '';
-    if (range === '1D') {
-      timeSeriesKey = `Time Series (${interval})`;
-    } else if (range === '1W' || range === '1M') {
-      timeSeriesKey = 'Time Series (Daily)';
-    } else {
-      timeSeriesKey = 'Monthly Time Series';
-    }
+    const dates = data.values.map(value => value.datetime);
+    const prices = data.values.map(value => parseFloat(value.close));
 
-    const timeSeries = data[timeSeriesKey];
-    const dates = Object.keys(timeSeries);
-    const prices = dates.map(date => parseFloat(timeSeries[date]['4. close']));
+    // Filter data based on the range
+    let filteredDates = dates;
+    let filteredPrices = prices;
+    if (range === '1W') {
+      filteredDates = dates.slice(0, 7 * 24); // 1 week of hourly data
+      filteredPrices = prices.slice(0, 7 * 24);
+    } else if (range === '1M') {
+      filteredDates = dates.slice(0, 30); // 1 month of daily data
+      filteredPrices = prices.slice(0, 30);
+    } else if (range === '1Y') {
+      filteredDates = dates.slice(0, 52); // 1 year of weekly data
+      filteredPrices = prices.slice(0, 52);
+    }
 
     return new Response(JSON.stringify({
       stock,
-      dates: dates.reverse(),
-      prices: prices.reverse()
+      dates: filteredDates.reverse(),
+      prices: filteredPrices.reverse(),
     }), {
       headers: { 'Content-Type': 'application/json' },
     });
