@@ -87,8 +87,8 @@ import { useState, useEffect } from 'preact/hooks';
         if (response.status >= 500 || (data.error && data.error.includes("You've exceeded the maximum requests per minute"))) {
           errorMessage.textContent = 'Unfortunately, my API has been ratelimited. Please come back in 1-2 minutes to try again.';
           showPopup();
-        } else if (response.status === 404 || data.error === 'Invalid stock ticker') {
-          errorMessage.textContent = 'Invalid stock ticker. Please try again with a valid ticker symbol.';
+        } else if (response.status === 404 || data.error === 'Stock not found') {
+          errorMessage.textContent = 'Stock not found. Please try again with a valid stock name or ticker symbol.';
           showPopup();
         } else if (!data.error) {
           renderChart(data);

@@ -3,10 +3,10 @@ import { formatISO } from 'date-fns';
 
 export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);
-  const stock = url.searchParams.get('stock');
+  const stockInput = url.searchParams.get('stock');
   const range = url.searchParams.get('range');
 
-  if (!stock || !range) {
+  if (!stockInput || !range) {
     return new Response(JSON.stringify({ error: 'Stock and range parameters are required' }), { status: 400 });
   }
 
@@ -15,9 +15,6 @@ export const GET: APIRoute = async ({ request }) => {
   let startDate: string;
 
   switch (range) {
-    case '1D':
-      startDate = formatISO(new Date(today.setDate(today.getDate() - 1)), { representation: 'date' });
-      break;
     case '1W':
       startDate = formatISO(new Date(today.setDate(today.getDate() - 7)), { representation: 'date' });
       break;
@@ -34,24 +31,26 @@ export const GET: APIRoute = async ({ request }) => {
   }
 
   const apiKey = import.meta.env.POLYGON_API_KEY;
-  const stockDetailsUrl = `https://api.polygon.io/v3/reference/tickers/${stock}?apiKey=${apiKey}`;
+  const searchUrl = `https://api.polygon.io/v3/reference/tickers?search=${encodeURIComponent(stockInput)}&active=true&sort=ticker&order=asc&apiKey=${apiKey}`;
 
   try {
-    // Check if the stock ticker is valid
-    const stockDetailsResponse = await fetch(stockDetailsUrl);
+    // Search for the stock ticker based on the input name
+    const searchResponse = await fetch(searchUrl);
 
-    if (!stockDetailsResponse.ok) {
-      return new Response(JSON.stringify({ error: 'Invalid stock ticker' }), { status: 404 });
+    if (!searchResponse.ok) {
+      return new Response(JSON.stringify({ error: 'Stock not found' }), { status: 404 });
     }
 
-    const stockDetails = await stockDetailsResponse.json();
-    if (!stockDetails.results) {
-      return new Response(JSON.stringify({ error: 'Invalid stock ticker' }), { status: 404 });
+    const searchResults = await searchResponse.json();
+    if (!searchResults.results || searchResults.results.length === 0) {
+      return new Response(JSON.stringify({ error: 'Stock not found' }), { status: 404 });
     }
-    const stockName = stockDetails.results.name;
 
-    const stockDataUrl = `https://api.polygon.io/v2/aggs/ticker/${stock}/range/1/day/${startDate}/${endDate}?apiKey=${apiKey}`;
-    const stockFinancialsUrl = `https://api.polygon.io/v2/reference/financials/${stock}?limit=1&apiKey=${apiKey}`;
+    const stockTicker = searchResults.results[0].ticker;
+    const stockName = searchResults.results[0].name;
+
+    const stockDataUrl = `https://api.polygon.io/v2/aggs/ticker/${stockTicker}/range/1/day/${startDate}/${endDate}?apiKey=${apiKey}`;
+    const stockFinancialsUrl = `https://api.polygon.io/v2/reference/financials/${stockTicker}?limit=1&apiKey=${apiKey}`;
 
     const [stockDataResponse, stockFinancialsResponse] = await Promise.all([
       fetch(stockDataUrl),
