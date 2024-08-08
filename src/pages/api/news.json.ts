@@ -66,14 +66,11 @@ export const GET: APIRoute = async ({ request }) => {
 
 function filterNews(articles, stock) {
   return articles.filter(article => {
-    const title = article.headline.toLowerCase();
     const description = article.summary.toLowerCase();
+    const title = article.headline.toLowerCase();
     const stockSymbol = stock.toLowerCase();
 
-    const isTitleRelevant = title.includes(stockSymbol);
-    const isDescriptionRelevant = description.includes(stockSymbol);
-    const hasSufficientDescription = description.length > 100;
-
-    return isTitleRelevant || isDescriptionRelevant || hasSufficientDescription;
+    const isDescriptionRelevant = description.includes(stockSymbol) || description.includes(title);
+    return isDescriptionRelevant;
   });
 }
