@@ -22,6 +22,8 @@ import { format } from 'date-fns';
         Fetch News
       </button>
 
+      <div id="resultsCount" class="mt-2 italic text-gray-700 dark:text-gray-300"></div>
+
       <div id="timeRangeButtons" class="mt-8">
         <button class="px-4 py-2" data-range="1W">1W</button>
         <button class="px-4 py-2" data-range="1M">1M</button>
@@ -50,6 +52,7 @@ import { format } from 'date-fns';
     const fetchButton = document.getElementById('fetchButton');
     const stockInput = document.getElementById('stockInput');
     const newsContainer = document.getElementById('newsContainer');
+    const resultsCount = document.getElementById('resultsCount');
     const timeRangeButtons = document.getElementById('timeRangeButtons').querySelectorAll('button');
     const customRangePopup = document.getElementById('customRangePopup');
     let timeRange = '1M'; // Default time range to 1 Month
@@ -98,6 +101,8 @@ import { format } from 'date-fns';
         if (data.error) {
           console.error(data.error);
         } else {
+          const numResults = data.articles.length > 999 ? '999+' : data.articles.length;
+          resultsCount.textContent = `${numResults} results`;
           renderNews(data);
         }
       } catch (error) {
