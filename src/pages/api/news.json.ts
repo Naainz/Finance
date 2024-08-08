@@ -47,11 +47,13 @@ export const GET: APIRoute = async ({ request }) => {
       throw new Error(newsData.error || 'Error fetching news');
     }
 
-    const articles = newsData.map(article => ({
+    const filteredArticles = filterNews(newsData, stock);
+
+    const articles = filteredArticles.map(article => ({
       title: article.headline,
       description: article.summary,
       url: article.url,
-      datetime: article.datetime, // Add datetime field
+      datetime: article.datetime,
     }));
 
     return new Response(JSON.stringify({ articles }), {
@@ -61,3 +63,17 @@ export const GET: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 };
+
+function filterNews(articles, stock) {
+  return articles.filter(article => {
+    const title = article.headline.toLowerCase();
+    const description = article.summary.toLowerCase();
+    const stockSymbol = stock.toLowerCase();
+
+    const isTitleRelevant = title.includes(stockSymbol);
+    const isDescriptionRelevant = description.includes(stockSymbol);
+    const hasSufficientDescription = description.length > 100;
+
+    return isTitleRelevant || isDescriptionRelevant || hasSufficientDescription;
+  });
+}
