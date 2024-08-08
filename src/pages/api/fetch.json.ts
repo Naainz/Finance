@@ -45,6 +45,9 @@ export const GET: APIRoute = async ({ request }) => {
     }
 
     const stockDetails = await stockDetailsResponse.json();
+    if (!stockDetails.results) {
+      return new Response(JSON.stringify({ error: 'Invalid stock ticker' }), { status: 404 });
+    }
     const stockName = stockDetails.results.name;
 
     const stockDataUrl = `https://api.polygon.io/v2/aggs/ticker/${stock}/range/1/day/${startDate}/${endDate}?apiKey=${apiKey}`;

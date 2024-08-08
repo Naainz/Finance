@@ -44,7 +44,7 @@ import { useState, useEffect } from 'preact/hooks';
     <div id="errorPopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-md mx-auto">
         <strong class="font-bold">Error</strong>
-        <span class="block sm:inline">Unfortunately, my API has been ratelimited. Please come back in 1-2 minutes to try again.</span>
+        <span id="errorMessage" class="block sm:inline">Unfortunately, my API has been ratelimited. Please come back in 1-2 minutes to try again.</span>
       </div>
     </div>
   </section>
@@ -63,6 +63,7 @@ import { useState, useEffect } from 'preact/hooks';
     const priceChange = document.getElementById('priceChange');
     const marketCapElement = document.getElementById('marketCap');
     const revenueElement = document.getElementById('revenue');
+    const errorMessage = document.getElementById('errorMessage');
     let chartInstance = null;
     let currentStock = '';
     let timeRange = '1M'; // Default time range to 1 Month
@@ -85,6 +86,10 @@ import { useState, useEffect } from 'preact/hooks';
         const data = await response.json();
 
         if (response.status >= 500 || (data.error && data.error.includes("You've exceeded the maximum requests per minute"))) {
+          errorMessage.textContent = 'Unfortunately, my API has been ratelimited. Please come back in 1-2 minutes to try again.';
+          showPopup();
+        } else if (response.status === 404 || data.error === 'Invalid stock ticker') {
+          errorMessage.textContent = 'Invalid stock ticker. Please try again with a valid ticker symbol.';
           showPopup();
         } else if (!data.error) {
           renderChart(data);
